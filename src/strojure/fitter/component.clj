@@ -14,7 +14,7 @@
     "Stops component instance."))
 
 (extend-protocol Component
-  ;;; Persistent map as component.
+  ;;; Persistent map #::{:start start-fn, :stop stop-fn} as component.
   IPersistentMap
   (start [this sys]
     (if-let [f (this ::start)]
@@ -23,14 +23,14 @@
   (stop! [this inst]
     (when-let [f (this ::stop!)]
       (f inst)))
-  ;;; Function as component :start, other methods in meta.
+  ;;; Function as component's ::start, other methods in meta.
   AFunction
   (start [this sys]
     (this sys))
   (stop! [this inst]
     (when-let [f (-> this meta ::stop!)]
       (f inst)))
-  ;;; Var as component :start, other methods in meta.
+  ;;; Var as component's ::start, other methods in meta.
   Var
   (start [this sys]
     (this sys))
