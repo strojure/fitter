@@ -25,18 +25,20 @@
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
-(defn- var-component
-  {::component/stop! (fn [inst] inst)}
-  [system] system)
+(comment
 
-(defn- var-component-no-meta
-  [system] system)
+  (defn- var-component
+    {::component/stop! (fn [inst] inst)}
+    [system] system)
 
-(test/deftest var-test
-  (test/testing "A var as system component."
-    (test/are [expr result] (= result expr)
-      (-> #'var-component (component/start :instance)) #_=> :instance
-      (-> #'var-component (component/stop! :instance)) #_=> :instance
-      (-> #'var-component-no-meta (component/stop! :instance)) #_=> nil)))
+  (defn- var-component-no-meta
+    [system] system)
+
+  (test/deftest var-test
+    (test/testing "A var as system component."
+      (test/are [expr result] (= result expr)
+        (-> #'var-component (component/start :instance)) #_=> :instance
+        (-> #'var-component (component/stop! :instance)) #_=> :instance
+        (-> #'var-component-no-meta (component/stop! :instance)) #_=> nil))))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
