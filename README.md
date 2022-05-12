@@ -21,7 +21,7 @@ Dependency injection library for Clojure.
 
 ## Examples
 
-* [app-system](example_src/strojure/fitter_example/app_system.clj)
+* [app-system](examples/src/examples/strojure_fitter/app_system.clj)
 
 ## TODO
 * Optional parallel start/stop of system components.
