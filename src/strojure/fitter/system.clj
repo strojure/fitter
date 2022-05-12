@@ -1,6 +1,7 @@
 (ns strojure.fitter.system
   "Defines system of dependent components to start/stop them."
-  (:require [strojure.fitter.component :as component])
+  (:require [clojure.set :as set]
+            [strojure.fitter.component :as component])
   (:import (clojure.lang IDeref IFn ILookup IPersistentMap MapEntry)
            (java.io Closeable)))
 
@@ -13,9 +14,10 @@
 
   (start!
     [system-atom]
-    [system-atom, {:keys [filter-keys] :as opts}]
+    [system-atom, {:keys [registry, filter-keys] :as opts}]
     "Starts not running system components, all registered or selected by
-    optional predicate function `filter-keys`. Returns `system-atom`.")
+    optional predicate function `filter-keys`. Handles changes in the `registry`
+    if provided. Returns `system-atom`.")
 
   (stop!
     [system-atom]
@@ -52,9 +54,9 @@
   "Particular map-like view provided as argument in `::component/start`. Tracks
   dependencies and evaluates required components on demand."
   [component-key delays! deps!]
-  (let [force-inst (fn [inst k]
-                     (when (-> (swap! deps! update-deps component-key k)
-                               (get component-key)
+  (let [track-deps (partial swap! deps! update-deps component-key)
+        force-inst (fn [inst _k]
+                     (when (-> (@deps! component-key)
                                (contains? component-key))
                        (throw (ex-info (str "Cyclic dependencies: " (pr-str component-key)
                                             " -> " (@deps! component-key))
@@ -63,8 +65,11 @@
                                         ::deps @deps!})))
                      (force inst))
         lookup-fn (fn
-                    ([k] (some-> (@delays! k) (force-inst k)))
+                    ([k]
+                     (track-deps k)
+                     (some-> (@delays! k) (force-inst k)))
                     ([k not-found]
+                     (track-deps k)
                      (if-let [inst (@delays! k)]
                        (force-inst inst k)
                        not-found)))]
@@ -77,83 +82,106 @@
       (invoke [_ k not-found] (lookup-fn k not-found))
       IPersistentMap
       (seq [_] (keep (fn [[k inst]] (when (realized? inst)
+                                      (track-deps k)
                                       [k (force-inst inst k)]))
                      @delays!))
-      (containsKey [_ k] (if-let [inst (@delays! k)]
-                           (force-inst inst k)
-                           false))
-      (entryAt [_ k] (when-let [inst (@delays! k)]
-                       (MapEntry. k (force-inst inst k)))))))
+      (containsKey [_ k]
+        (track-deps k)
+        (if-let [inst (@delays! k)]
+          (force-inst inst k)
+          false))
+      (entryAt [_ k]
+        (track-deps k)
+        (when-let [inst (@delays! k)]
+          (MapEntry. k (force-inst inst k)))))))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
-(defn init-system
-  "Returns [[SystemAtom]] implementation for the `registry` of components.
+(defn system-atom
+  "Returns [[SystemAtom]] implementation with initial `registry` of components.
   Optional function `(fn wrap-component [component key] wrapped-component)`
   allows to add additional functionality around component methods for logging,
   exception handling etc. The returned instance is `with-open`-friendly."
-  ^Closeable
-  [registry {:keys [wrap-component] :as opts}]
-  (let [deps! (atom {})
-        delays! (atom nil)
-        snapshot! (atom nil)
-        wrapped (fn wrapped-component [k]
-                  (cond-> (registry k) wrap-component (wrap-component k)))
-        start-delay
-        (fn start-delay [k]
-          (delay (try
-                   (swap! deps! dissoc k)
-                   (component/start (wrapped k)
-                                    (component-system k delays! deps!))
-                   (catch Throwable e
-                     (swap! deps! dissoc k)
-                     (swap! delays! assoc k (start-delay k))
-                     (throw (->> e (ex-info (str "Component start failure: " k)
-                                            {:type ::start-component-failure
-                                             ::key k}))))
-                   (finally
-                     (reset! snapshot! nil)))))]
-    (reset! delays! (->> (keys registry)
-                         (into {} (map (fn [k] [k (start-delay k)])))))
-    (reify
-      SystemAtom
-      (start! [this] (start! this nil))
-      (start! [this {:keys [filter-keys]}]
-        (try
-          (->> (cond->> (keys registry) filter-keys (filter filter-keys))
-               (run! (fn start-key [k]
-                       (force (@delays! k)))))
-          (catch Throwable e
-            (throw (->> e (ex-info "System start failure" {:type ::system-start-failure
-                                                           ::system this})))))
-        this)
+  (^Closeable [] (system-atom {}))
+  (^Closeable
+   [{:keys [registry, wrap-component] :as opts}]
+   (let [registry! (atom (or registry {}))
+         deps! (atom {})
+         delays! (atom {})
+         snapshot! (atom nil)
+         wrapped (fn wrapped-component [k]
+                   (cond-> (@registry! k) wrap-component (wrap-component k)))
+         start-delay
+         (fn start-delay [k]
+           (delay (try
+                    (swap! deps! dissoc k)
+                    (component/start (wrapped k)
+                                     (component-system k delays! deps!))
+                    (catch Throwable e
+                      (swap! deps! dissoc k)
+                      (swap! delays! assoc k (start-delay k))
+                      (throw (->> e (ex-info (str "Component start failure: " k)
+                                             {:type ::start-component-failure
+                                              ::key k}))))
+                    (finally
+                      (reset! snapshot! nil)))))]
+     (reset! delays!
+             (->> (keys @registry!)
+                  (into {} (map (fn [k] [k (start-delay k)])))))
+     (reify
+       SystemAtom
+       (start! [this] (start! this nil))
+       (start! [this {:keys [registry, filter-keys]}]
+         (when registry
+           (let [old-ks (set (keys @registry!))
+                 new-ks (set (keys registry))]
+             (when-let [removed (not-empty (set/difference old-ks new-ks))]
+               (stop! this {:filter-keys removed})
+               (swap! delays! #(apply dissoc % removed)))
+             (reset! registry! registry)
+             (when-let [added (not-empty (set/difference new-ks old-ks))]
+               ;; Ensure that all dependent components stop.
+               ;; This will also init delays for added keys.
+               (stop! this {:filter-keys added}))))
+         (try
+           (->> (cond->> (keys @registry!) filter-keys (filter filter-keys))
+                (run! (fn start-key [k]
+                        (force (@delays! k)))))
+           (catch Throwable e
+             (throw (->> e (ex-info "System start failure" {:type ::system-start-failure
+                                                            ::system this})))))
+         this)
 
-      (stop! [this] (stop! this nil))
-      (stop! [this {:keys [filter-keys]}]
-        (->> (cond->> (keys @delays!) filter-keys (filter filter-keys))
-             (run! (fn stop-key [k]
-                     (let [inst (@delays! k)]
-                       (when (realized? inst)
-                         (->> @deps! (keep (fn [[dk deps]] (when (deps k) dk)))
-                              (run! stop-key))
-                         (when-let [stop-fn (component/stop-fn (wrapped k))]
-                           (try (stop-fn @inst)
-                                (catch Throwable _)))
-                         (swap! deps! dissoc k)
-                         (swap! delays! assoc k (start-delay k)))))))
-        (reset! snapshot! nil)
-        this)
+       (stop! [this] (stop! this nil))
+       (stop! [this {:keys [filter-keys]}]
+         (->> (cond->> (keys @registry!) filter-keys (filter filter-keys))
+              (run! (fn stop-key [k]
+                      ;; Run over dependent keys even if they are not started
+                      ;; because keys can emerge on registry changes.
+                      (->> @deps! (keep (fn [[dk deps]] (when (deps k) dk)))
+                           (run! stop-key))
+                      (let [inst (@delays! k)
+                            inst (when (some-> inst realized?) inst)
+                            stop-fn (when inst (component/stop-fn (wrapped k)))]
+                        (when stop-fn
+                          (try (stop-fn @inst)
+                               (catch Throwable _))))
+                      (swap! deps! dissoc k)
+                      (swap! delays! assoc k (start-delay k)))))
+         (reset! snapshot! nil)
+         this)
 
-      (inspect [this]
-        {:registry registry :opts opts :deps @deps! :delays @delays! :system (deref this)})
+       (inspect [this]
+         {:opts (dissoc opts :registry) :registry @registry! :delays @delays!
+          :deps @deps! :system (deref this)})
 
-      IDeref
-      (deref [_]
-        (or (.deref ^IDeref snapshot!)
-            (reset! snapshot! (into {} (keep (fn [[k inst]] (when (realized? inst)
-                                                              (MapEntry. k (deref inst)))))
-                                    @delays!))))
-      Closeable
-      (close [this] (stop! this)))))
+       IDeref
+       (deref [_]
+         (or (.deref ^IDeref snapshot!)
+             (reset! snapshot! (into {} (keep (fn [[k inst]] (when (realized? inst)
+                                                               (MapEntry. k (deref inst)))))
+                                     @delays!))))
+       Closeable
+       (close [this] (stop! this))))))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••

@@ -57,8 +57,8 @@
 
 (comment
   (do (print-status)
-      (with-open [system! (system/init-system registry {})]
-        (system/start! system!)
+      (with-open [system! (system/system-atom)]
+        (system/start! system! {:registry registry})
         (print-status))
       (print-status))
   ;Status - {:test-function :default} {:test-value :default} Attempting to call unbound fn: #'examples.strojure-fitter.mount/test-declare

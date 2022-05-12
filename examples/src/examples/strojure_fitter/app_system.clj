@@ -172,8 +172,8 @@
 (defn- run-example
   ([system-keys] (run-example system-keys app-registry))
   ([system-keys registry]
-   (with-open [system! (system/init-system registry {:wrap-component wrap-component})]
-     (-> (system/start! system! {:filter-keys system-keys})
+   (with-open [system! (system/system-atom {:wrap-component wrap-component})]
+     (-> (system/start! system! {:registry registry :filter-keys system-keys})
          (doto print-started-status)
          (system/inspect)
          (select-keys [:deps :system])))))
