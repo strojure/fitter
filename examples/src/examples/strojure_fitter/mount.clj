@@ -25,6 +25,14 @@
   "The value which can be used without system start."
   {:test-value :default})
 
+(defn test-deps
+  "The function which depends on other mounted component."
+  {::component/start (fn [system]
+                       (println "Start" 'test-deps)
+                       (constantly {:test-deps (system `test-value)}))}
+  []
+  {:test-deps :default})
+
 (declare ^{:doc "Declared but not initialized value which cannot be used without system start."
            ::component/start (fn [system]
                                (println "Start" 'test-declare)
@@ -36,6 +44,7 @@
 (def ^:private registry
   {:system/x (constantly :x)
    `test-function (mount/component `test-function)
+   `test-deps (mount/component `test-deps)
    `test-value (mount/component `test-value)
    `test-declare (mount/component `test-declare)})
 
@@ -43,7 +52,7 @@
 
 (defn- print-status
   []
-  (println "Status -" (test-function) test-value
+  (println "Status -" (test-function) test-value (test-deps)
            (try (test-declare) (catch Throwable e (ex-message e)))))
 
 (comment
