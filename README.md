@@ -2,12 +2,23 @@
 
 Dependency injection library for Clojure.
 
-## Vocabulary
+## Status
 
-* **instance** something useful instantiated :-)
-* **component** describe how to initialize/destroy instance of something.
-* **registry** map of keys and components
-* **system** collection of dependent component instances.
+* [x] Start/stop system of components.
+* [x] Mount running instances.
+* [x] Suspend/resume components.
+* [ ] Parallel start/stop.
+
+## Terminology
+
+* **instance**
+    * something useful instantiated :-)
+* **component**
+    * describe how to initialize/destroy instance of something.
+* **registry**
+    * map of keys and components
+* **system**
+    * collection of dependent component instances.
 
 ## Overview
 
@@ -23,7 +34,9 @@ Dependency injection library for Clojure.
 
 * [app-system](examples/src/examples/strojure_fitter/app_system.clj)
 * [mount](examples/src/examples/strojure_fitter/mount.clj)
+* [suspend](examples/src/examples/strojure_fitter/suspend.clj)
 
 ## TODO
+
 * Optional parallel start/stop of system components.
 * Experimental: lazy system which does not require explicit `start!` (?).
