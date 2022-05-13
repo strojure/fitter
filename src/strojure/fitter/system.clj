@@ -17,14 +17,14 @@
     [system-atom, {:keys [registry, filter-keys] :as opts}]
     "Starts not running system components, all registered or selected by
     optional predicate function `filter-keys`. Handles changes in the `registry`
-    if provided. Returns `system-atom`.")
+    if provided. Returns result map of running instances.")
 
   (stop!
     [system-atom]
     [system-atom, {:keys [filter-keys, suspend] :as opts}]
     "Stops started system components, all keys in the registry or selected by optional
     predicate function `filter-keys`. Suspends suspendable components if
-    `suspend` is true. Returns `system-atom`.")
+    `suspend` is true. Returns result map of running instances.")
 
   (inspect
     [system-atom]
@@ -155,7 +155,7 @@
            (catch Throwable e
              (throw (->> e (ex-info "System start failure" {:type ::system-start-failure
                                                             ::system this})))))
-         this)
+         (deref this))
 
        (stop! [this] (stop! this nil))
        (stop! [this {:keys [filter-keys suspend]}]
@@ -183,7 +183,7 @@
                           (swap! deps! dissoc k)
                           (swap! delays! assoc k (start-delay k)))))))
          (reset! snapshot! nil)
-         this)
+         (deref this))
 
        (inspect [this]
          {:opts (dissoc opts :registry) :registry @registry! :delays @delays!
@@ -196,6 +196,6 @@
                                                                (MapEntry. k (deref inst)))))
                                      @delays!))))
        Closeable
-       (close [this] (stop! this))))))
+       (close [this] (stop! this) nil)))))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••

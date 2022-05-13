@@ -45,6 +45,7 @@
   (system/stop! my-system! {:suspend true})
   (system/stop! my-system! {:suspend true :filter-keys #{:system/simple}})
   (system/start! my-system! {:registry (dissoc registry :system/suspending)})
+  (system/start! my-system! {:filter-keys #{:system/suspending}})
   (system/stop! my-system!)
   )
 

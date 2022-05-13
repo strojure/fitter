@@ -152,6 +152,8 @@
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
+;; TODO: `suspend!` in wrap-component
+
 (defn- wrap-component
   [c k]
   {::component/start (fn [system]
@@ -165,17 +167,17 @@
                               (catch Throwable e
                                 (println ":: Stopped" k "-> Exception:" (ex-message e))))))})
 
-(defn- print-started-status
-  [system!]
-  (println "\n[OK]" (str (count @system!) "/" (count app-registry)) "system keys started.\n"))
+(defn- print-system-status
+  [system]
+  (println "\n[OK]" (str (count system) "/" (count app-registry)) "system keys started.\n"))
 
 (defn- run-example
   ([system-keys] (run-example system-keys app-registry))
   ([system-keys registry]
    (with-open [system! (system/system-atom {:wrap-component wrap-component})]
      (-> (system/start! system! {:registry registry :filter-keys system-keys})
-         (doto print-started-status)
-         (system/inspect)
+         (print-system-status))
+     (-> (system/inspect system!)
          (select-keys [:deps :system])))))
 
 (comment
@@ -236,39 +238,14 @@
   ; Stopped :system/http-client -> nil
   ; Shutdown HTTP connection manager #:instance{:http-conn-mgr nil}
   ; Stopped :system/http-conn-mgr -> nil
-  #_#_=>
-  {:deps {:system/datasource-readwrite #{:system/dev-mode :system/app-config},
-          :deps/ready-to-serve #{:system/datasource-readwrite
-                                 :system/mount
-                                 :system/dev-mode
-                                 :task/database-migration
-                                 :system/app-config},
-          :system/http-server #{:system/datasource-readwrite
-                                :deps/ready-to-serve
-                                :system/rpc-client-2
-                                :system/rpc-connection
-                                :system/mount
-                                :system/dev-mode
-                                :system/restapi-http-client
-                                :system/rpc-client-1
-                                :system/datasource-readonly
-                                :system/http-client
-                                :system/http-conn-mgr
-                                :task/database-migration
-                                :system/app-config},
-          :system/rpc-client-2 #{:system/rpc-connection :system/app-config},
-          :system/rpc-connection #{:system/app-config},
-          :system/mount #{:system/datasource-readwrite
-                          :system/rpc-client-2
-                          :system/rpc-connection
-                          :system/dev-mode
-                          :system/restapi-http-client
-                          :system/rpc-client-1
-                          :system/datasource-readonly
-                          :system/http-client
-                          :system/http-conn-mgr
-                          :system/app-config},
-          :system/rpc-broadcast #{:system/datasource-readwrite
+  #_=>
+  #_{:deps {:system/datasource-readwrite #{:system/dev-mode :system/app-config},
+            :deps/ready-to-serve #{:system/datasource-readwrite
+                                   :system/mount
+                                   :system/dev-mode
+                                   :task/database-migration
+                                   :system/app-config},
+            :system/http-server #{:system/datasource-readwrite
                                   :deps/ready-to-serve
                                   :system/rpc-client-2
                                   :system/rpc-connection
@@ -281,50 +258,75 @@
                                   :system/http-conn-mgr
                                   :task/database-migration
                                   :system/app-config},
-          :system/restapi-http-client #{:system/http-conn-mgr},
-          :system/rpc-client-1 #{:system/rpc-connection :system/app-config},
-          :system/datasource-readonly #{:system/dev-mode :system/app-config},
-          :system/backend-server #{:system/datasource-readwrite
-                                   :deps/ready-to-serve
-                                   :system/rpc-client-2
-                                   :system/rpc-connection
-                                   :system/mount
-                                   :system/dev-mode
-                                   :system/restapi-http-client
-                                   :system/rpc-client-1
-                                   :system/datasource-readonly
-                                   :system/http-client
-                                   :system/http-conn-mgr
-                                   :task/database-migration
-                                   :system/app-config},
-          :system/http-client #{:system/http-conn-mgr},
-          :task/database-migration #{:system/datasource-readwrite :system/app-config}},
-   :system {:system/datasource-readwrite #:instance{:datasource {:read-only false, :dev-mode true}},
-            :deps/ready-to-serve [:task/database-migration :system/mount],
-            :system/http-server #:instance{:http-server {:handlers ("homepage" "mobile" "webapi"),
-                                                         :dev-mode true}},
-            :system/rpc-client-2 #:instance{:rpc-client {:service "service-2",
-                                                         :connection #:instance{:rpc-connection {}}}},
-            :system/rpc-connection #:instance{:rpc-connection {}},
-            :system/mount (:system/app-config
-                            :system/datasource-readwrite
-                            :system/datasource-readonly
-                            :system/http-client
+            :system/rpc-client-2 #{:system/rpc-connection :system/app-config},
+            :system/rpc-connection #{:system/app-config},
+            :system/mount #{:system/datasource-readwrite
+                            :system/rpc-client-2
+                            :system/rpc-connection
+                            :system/dev-mode
                             :system/restapi-http-client
                             :system/rpc-client-1
-                            :system/rpc-client-2),
-            :system/dev-mode true,
-            :system/rpc-broadcast #:instance{:rpc-broadcast {:connection #:instance{:rpc-connection {}}}},
-            :system/restapi-http-client #:instance{:http-client {:no-connection-reuse true}},
-            :system/rpc-client-1 #:instance{:rpc-client {:service "service-1",
-                                                         :connection #:instance{:rpc-connection {}}}},
-            :system/datasource-readonly #:instance{:datasource {:read-only true, :dev-mode true}},
-            :system/backend-server #:instance{:rpc-server {:service "backend",
+                            :system/datasource-readonly
+                            :system/http-client
+                            :system/http-conn-mgr
+                            :system/app-config},
+            :system/rpc-broadcast #{:system/datasource-readwrite
+                                    :deps/ready-to-serve
+                                    :system/rpc-client-2
+                                    :system/rpc-connection
+                                    :system/mount
+                                    :system/dev-mode
+                                    :system/restapi-http-client
+                                    :system/rpc-client-1
+                                    :system/datasource-readonly
+                                    :system/http-client
+                                    :system/http-conn-mgr
+                                    :task/database-migration
+                                    :system/app-config},
+            :system/restapi-http-client #{:system/http-conn-mgr},
+            :system/rpc-client-1 #{:system/rpc-connection :system/app-config},
+            :system/datasource-readonly #{:system/dev-mode :system/app-config},
+            :system/backend-server #{:system/datasource-readwrite
+                                     :deps/ready-to-serve
+                                     :system/rpc-client-2
+                                     :system/rpc-connection
+                                     :system/mount
+                                     :system/dev-mode
+                                     :system/restapi-http-client
+                                     :system/rpc-client-1
+                                     :system/datasource-readonly
+                                     :system/http-client
+                                     :system/http-conn-mgr
+                                     :task/database-migration
+                                     :system/app-config},
+            :system/http-client #{:system/http-conn-mgr},
+            :task/database-migration #{:system/datasource-readwrite :system/app-config}},
+     :system {:system/datasource-readwrite #:instance{:datasource {:read-only false, :dev-mode true}},
+              :deps/ready-to-serve [:task/database-migration :system/mount],
+              :system/http-server #:instance{:http-server {:handlers ("homepage" "mobile" "webapi"),
+                                                           :dev-mode true}},
+              :system/rpc-client-2 #:instance{:rpc-client {:service "service-2",
                                                            :connection #:instance{:rpc-connection {}}}},
-            :system/http-client #:instance{:http-client nil},
-            :system/http-conn-mgr #:instance{:http-conn-mgr nil},
-            :task/database-migration :status/OK,
-            :system/app-config {}}}
+              :system/rpc-connection #:instance{:rpc-connection {}},
+              :system/mount (:system/app-config
+                              :system/datasource-readwrite
+                              :system/datasource-readonly
+                              :system/http-client
+                              :system/restapi-http-client
+                              :system/rpc-client-1
+                              :system/rpc-client-2),
+              :system/dev-mode true,
+              :system/rpc-broadcast #:instance{:rpc-broadcast {:connection #:instance{:rpc-connection {}}}},
+              :system/restapi-http-client #:instance{:http-client {:no-connection-reuse true}},
+              :system/rpc-client-1 #:instance{:rpc-client {:service "service-1",
+                                                           :connection #:instance{:rpc-connection {}}}},
+              :system/datasource-readonly #:instance{:datasource {:read-only true, :dev-mode true}},
+              :system/backend-server #:instance{:rpc-server {:service "backend",
+                                                             :connection #:instance{:rpc-connection {}}}},
+              :system/http-client #:instance{:http-client nil},
+              :system/http-conn-mgr #:instance{:http-conn-mgr nil},
+              :task/database-migration :status/OK,
+              :system/app-config {}}}
 
   (run-example nil)
   (run-example #{:task/database-migration})
