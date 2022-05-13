@@ -21,9 +21,10 @@
 
   (stop!
     [system-atom]
-    [system-atom, {:keys [filter-keys] :as opts}]
+    [system-atom, {:keys [filter-keys, suspend] :as opts}]
     "Stops started system components, all keys in the registry or selected by optional
-    predicate function `filter-keys`. Returns `system-atom`.")
+    predicate function `filter-keys`. Suspends suspendable components if
+    `suspend` is true. Returns `system-atom`.")
 
   (inspect
     [system-atom]
@@ -109,14 +110,18 @@
          deps! (atom {})
          delays! (atom {})
          snapshot! (atom nil)
+         suspended! (atom {})
          wrapped (fn wrapped-component [k]
                    (cond-> (@registry! k) wrap-component (wrap-component k)))
          start-delay
          (fn start-delay [k]
            (delay (try
                     (swap! deps! dissoc k)
-                    (component/start (wrapped k)
-                                     (component-system k delays! deps!))
+                    (let [system (component-system k delays! deps!)]
+                      (if-let [{:keys [resume-fn]} (@suspended! k)]
+                        (do (swap! suspended! dissoc k)
+                            (resume-fn system))
+                        (component/start (wrapped k) system)))
                     (catch Throwable e
                       (swap! deps! dissoc k)
                       (swap! delays! assoc k (start-delay k))
@@ -153,27 +158,36 @@
          this)
 
        (stop! [this] (stop! this nil))
-       (stop! [this {:keys [filter-keys]}]
-         (->> (cond->> (keys @registry!) filter-keys (filter filter-keys))
-              (run! (fn stop-key [k]
-                      ;; Run over dependent keys even if they are not started
-                      ;; because keys can emerge on registry changes.
-                      (->> @deps! (keep (fn [[dk deps]] (when (deps k) dk)))
-                           (run! stop-key))
-                      (let [inst (@delays! k)
-                            inst (when (some-> inst realized?) inst)
-                            stop-fn (when inst (component/stop-fn (wrapped k)))]
-                        (when stop-fn
-                          (try (stop-fn @inst)
-                               (catch Throwable _))))
-                      (swap! deps! dissoc k)
-                      (swap! delays! assoc k (start-delay k)))))
+       (stop! [this {:keys [filter-keys suspend]}]
+         (let [old-system (deref this)]
+           (->> (cond->> (keys @registry!) filter-keys (filter filter-keys))
+                (run! (fn stop-key [k]
+                        ;; Run over dependent keys even if they are not started
+                        ;; because keys can emerge on registry changes.
+                        (->> @deps! (keep (fn [[dk deps]] (when (deps k) dk)))
+                             (run! stop-key))
+                        (let [inst (@delays! k)
+                              inst (or (when (some-> inst realized?) inst)
+                                       (and (not suspend) (:inst (@suspended! k))))
+                              stop-fn (and inst (component/stop-fn (wrapped k)))
+                              resume-fn (when-let [suspend-fn (and inst suspend (component/suspend-fn (wrapped k)))]
+                                          (try (suspend-fn @inst old-system)
+                                               (catch Throwable _)))]
+                          (cond
+                            ;; TODO: Should we keep current deps in suspended?
+                            resume-fn (swap! suspended! assoc k {:inst inst
+                                                                 :resume-fn resume-fn})
+                            stop-fn (try (swap! suspended! dissoc k)
+                                         (stop-fn @inst)
+                                         (catch Throwable _)))
+                          (swap! deps! dissoc k)
+                          (swap! delays! assoc k (start-delay k)))))))
          (reset! snapshot! nil)
          this)
 
        (inspect [this]
          {:opts (dissoc opts :registry) :registry @registry! :delays @delays!
-          :deps @deps! :system (deref this)})
+          :suspended @suspended! :deps @deps! :system (deref this)})
 
        IDeref
        (deref [_]

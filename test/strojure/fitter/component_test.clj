@@ -1,44 +1,76 @@
 (ns strojure.fitter.component-test
-  (:require [clojure.test :as test]
-            [strojure.fitter.component :as component]))
+  (:require [clojure.test :as test :refer [deftest testing]]
+            [strojure.fitter.component :as component])
+  (:import (clojure.lang ExceptionInfo)))
 
 (set! *warn-on-reflection* true)
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
-(test/deftest persistent-map-test
-  (test/testing "A persistent map as system component."
-    (test/are [expr result] (= result expr)
-      (-> #::component{:start identity} (component/start :instance)) #_=> :instance
-      (-> #::component{:stop! identity} (component/stop! :instance)) #_=> :instance
-      (-> #::component{:start identity} (component/stop! :instance)) #_=> nil
-      (-> {} (component/stop! :instance)) #_=> nil)))
+(defn- test-suspend-fn
+  [new-instance]
+  (fn suspend! [old-instance old-system]
+    (fn resume [new-system]
+      [new-instance new-system old-instance old-system])))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
-(test/deftest function-test
-  (test/testing "A function as system component."
-    (test/are [expr result] (= result expr)
-      (-> identity (component/start :instance)) #_=> :instance
-      (-> identity (with-meta #::component{:stop! identity}) (component/stop! :instance)) #_=> :instance
-      (-> identity (component/stop! :instance)) #_=> nil)))
+(deftest persistent-map-test
+  (testing "A persistent map as a component."
 
-;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
-
-(comment
-
-  (defn- var-component
-    {::component/stop! (fn [inst] inst)}
-    [system] system)
-
-  (defn- var-component-no-meta
-    [system] system)
-
-  (test/deftest var-test
-    (test/testing "A var as system component."
+    (testing "Component `start`."
       (test/are [expr result] (= result expr)
-        (-> #'var-component (component/start :instance)) #_=> :instance
-        (-> #'var-component (component/stop! :instance)) #_=> :instance
-        (-> #'var-component-no-meta (component/stop! :instance)) #_=> nil))))
+        (-> {::component/start identity}
+            (component/start :instance)) #_=> :instance
+        (try (-> {} (component/start :instance))
+             (catch ExceptionInfo _ :exception)) #_=> :exception
+        ))
+
+    (testing "Component `stop-fn`"
+      (test/are [expr result] (= result expr)
+        (-> {::component/stop! identity}
+            (component/stop-fn)
+            (apply [:instance])) #_=> :instance
+        (-> {} (component/stop-fn)) #_=> nil
+        ))
+
+    (testing "Component `suspend-fn`"
+      (test/are [expr result] (= result expr)
+        (-> {::component/suspend! (test-suspend-fn :new-instance)}
+            (component/suspend-fn)
+            (apply [:instance :old-system])
+            (apply [:new-system])) #_=> [:new-instance :new-system :instance :old-system]
+        (-> {} (component/suspend-fn)) #_=> nil
+        ))))
+
+;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
+
+(deftest function-test
+  (testing "A function as a component."
+
+    (testing "Component `start`."
+      (test/are [expr result] (= result expr)
+        (-> identity
+            (component/start :instance)) #_=> :instance
+        ))
+
+    (testing "Component `stop-fn`"
+      (test/are [expr result] (= result expr)
+        (-> identity (with-meta {::component/stop! identity})
+            (component/stop-fn)
+            (apply [:instance])) #_=> :instance
+        (-> identity
+            (component/stop-fn)) #_=> nil
+        ))
+
+    (testing "Component `suspend-fn`"
+      (test/are [expr result] (= result expr)
+        (-> identity (with-meta {::component/suspend! (test-suspend-fn :new-instance)})
+            (component/suspend-fn)
+            (apply [:instance :old-system])
+            (apply [:new-system])) #_=> [:new-instance :new-system :instance :old-system]
+        (-> identity
+            (component/suspend-fn)) #_=> nil
+        ))))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••

@@ -16,28 +16,47 @@
 
   (stop-fn
     [component]
-    "Returns function `(fn stop! [inst] (stop inst))` which can stop this
-    component instance. Used when caller wants to check if [[stop!]] is defined
-    for the component."))
+    "Returns function to stop component instance, or `nil` if component does not
+    need to be stopped:
 
-(defn stop!
-  "Stops component instance. Does nothing if stop function is not defined."
-  [component instance]
-  (when-let [f (stop-fn component)]
-    (f instance)))
+        (fn stop! [instance] (.stop instance))
+
+    ")
+
+  (suspend-fn
+    [component]
+    "Returns function to suspend component instance, or `nil` if component is
+    not suspendable:
+
+        (fn suspend! [instance old-system]
+          ;; Return function to resume component instance with new system.
+          (fn resume [new-system]
+            ;; Return resumed or restarted instance using old and new systems.
+            resumed-instance))
+
+    "))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
-;; Persistent map {::start start-fn, ::stop! stop-fn} as component.
+;; Persistent map  as component:
+;; {::start start-fn, ::stop! stop-fn, ::suspend! suspend-fn}
 (extend-type IPersistentMap Component
-  (start [this sys] (if-let [f (this ::start)]
-                      (f sys)
-                      (throw (ex-info "Start function is not defined for the component" {}))))
-  (stop-fn [this] (this ::stop!)))
+  (start [this system]
+    (if-let [f (this ::start)]
+      (f system)
+      (throw (ex-info "Start function is not defined for the component" {}))))
+  (stop-fn [this]
+    (this ::stop!))
+  (suspend-fn [this]
+    (this ::suspend!)))
 
 ;; Function as component's `start`, other methods in meta.
 (extend-type AFunction Component
-  (start [this sys] (this sys))
-  (stop-fn [this] (-> this meta ::stop!)))
+  (start [this system]
+    (this system))
+  (stop-fn [this]
+    (-> this meta ::stop!))
+  (suspend-fn [this]
+    (-> this meta ::suspend!)))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
