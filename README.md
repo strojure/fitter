@@ -7,7 +7,7 @@ Dependency injection library for Clojure.
 * [x] Start/stop system of components.
 * [x] Mount running instances.
 * [x] Suspend/resume components.
-* [ ] Parallel start/stop.
+* [x] Parallel start/stop.
 
 ## Terminology
 
@@ -34,6 +34,7 @@ Dependency injection library for Clojure.
 
 * [app-system](examples/src/examples/strojure_fitter/app_system.clj)
 * [How to mount](examples/src/examples/strojure_fitter/how_to_mount.clj)
+* [How to parallel](examples/src/examples/strojure_fitter/how_to_parallel.clj)
 * [How to suspend](examples/src/examples/strojure_fitter/how_to_suspend.clj)
 
 ## TODO
