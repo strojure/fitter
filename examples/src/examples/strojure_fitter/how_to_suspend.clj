@@ -36,7 +36,7 @@
    :system/suspending suspendable-component})
 
 (def ^:private my-system!
-  (system/system-atom {:registry registry}))
+  (system/init {:registry registry}))
 
 (comment
   (-> (system/inspect my-system!)

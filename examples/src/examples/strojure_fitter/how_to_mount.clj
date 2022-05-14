@@ -57,7 +57,7 @@
 
 (comment
   (do (print-status)
-      (with-open [system! (system/system-atom)]
+      (with-open [system! (system/init)]
         (system/start! system! {:registry registry})
         (print-status))
       (print-status))

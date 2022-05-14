@@ -9,26 +9,26 @@
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
-(defprotocol SystemAtom
-  "An “atom” with map of running system components."
+(defprotocol SystemState
+  "Stateful container of running system components."
 
   (start!
-    [system-atom]
-    [system-atom, {:keys [registry, filter-keys] :as opts}]
+    [state]
+    [state {:keys [registry, filter-keys] :as opts}]
     "Starts not running system components, all registered or selected by
     optional predicate function `filter-keys`. Handles changes in the `registry`
     if provided. Returns result map of running instances.")
 
   (stop!
-    [system-atom]
-    [system-atom, {:keys [filter-keys, suspend] :as opts}]
+    [state]
+    [state {:keys [filter-keys, suspend] :as opts}]
     "Stops started system components, all keys in the registry or selected by optional
     predicate function `filter-keys`. Suspends suspendable components if
     `suspend` is true. Returns result map of running instances.")
 
   (inspect
-    [system-atom]
-    "Returns arbitrary data about system map internals."))
+    [state]
+    "Returns arbitrary data about system state internals."))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
@@ -98,12 +98,12 @@
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
-(defn system-atom
-  "Returns [[SystemAtom]] implementation with initial `registry` of components.
+(defn init
+  "Returns [[SystemState]] implementation with initial `registry` of components.
   Optional function `(fn wrap-component [component key] wrapped-component)`
   allows to add additional functionality around component methods for logging,
   exception handling etc. The returned instance is `with-open`-friendly."
-  (^Closeable [] (system-atom {}))
+  (^Closeable [] (init {}))
   (^Closeable
    [{:keys [registry, wrap-component] :as opts}]
    (let [registry! (atom (or registry {}))
@@ -134,7 +134,7 @@
              (->> (keys @registry!)
                   (into {} (map (fn [k] [k (start-delay k)])))))
      (reify
-       SystemAtom
+       SystemState
        (start! [this] (start! this nil))
        (start! [this {:keys [registry, filter-keys]}]
          (when registry
