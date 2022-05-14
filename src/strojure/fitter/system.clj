@@ -14,17 +14,34 @@
 
   (start!
     [state]
-    [state {:keys [registry, filter-keys] :as opts}]
-    "Starts not running system components, all registered or selected by
-    optional predicate function `filter-keys`. Handles changes in the `registry`
-    if provided. Returns result map of running instances.")
+    [state {:keys [registry, filter-keys, parallel]}]
+    "Starts not running system components and returns map of running instances.
+
+    **`registry`** The optional new registry of system components to start and
+    to use in subsequent start/stop calls. If registry differs from the previous
+    one then removed keys stop.
+
+    **`filter-keys`** The optional predicate function to filter starting keys.
+    If not specified then all keys from the registry are starting.
+
+    **`parallel`** If `true` then components starts (possibly) in parallel.
+    ")
 
   (stop!
     [state]
-    [state {:keys [filter-keys, suspend] :as opts}]
+    [state {:keys [filter-keys, suspend, parallel]}]
     "Stops started system components, all keys in the registry or selected by optional
     predicate function `filter-keys`. Suspends suspendable components if
-    `suspend` is true. Returns result map of running instances.")
+    `suspend` is true. Returns result map of running instances.
+
+    **`filter-keys`** The optional predicate function to filter stopping keys.
+    If not specified then all keys from the registry are stopping.
+
+    **`suspend`** If true then suspendable components not stopped but suspended.
+    Suspended instances resume in next [[start!]] when they are required.
+
+    **`parallel`** If `true` then components stops in parallel.
+    ")
 
   (inspect
     [state]
@@ -62,8 +79,7 @@
                        (throw (ex-info (str "Cyclic dependencies: " (pr-str component-key)
                                             " -> " (@deps! component-key))
                                        {:type ::cyclic-dependencies
-                                        ::key component-key
-                                        ::deps @deps!})))
+                                        ::key component-key, ::deps @deps!})))
                      (force inst))
         lookup-fn (fn
                     ([k]
@@ -99,13 +115,23 @@
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
 (defn init
-  "Returns [[SystemState]] implementation with initial `registry` of components.
-  Optional function `(fn wrap-component [component key] wrapped-component)`
-  allows to add additional functionality around component methods for logging,
-  exception handling etc. The returned instance is `with-open`-friendly."
-  (^Closeable [] (init {}))
-  (^Closeable
-   [{:keys [registry, wrap-component] :as opts}]
+  "Returns [[SystemState]] implementation. The state is instance of
+  `java.io.Closeable` and can be used in `with-open` to stop system
+  automatically.
+
+  **`registry`** The optional initial registry of components to use in
+  subsequent start/stop calls.
+
+  **`parallel`** If `true` then subsequent start/stop calls execute components
+  by default in parallel.
+
+  **`wrap-component`** Deprecated, to be removed soon.
+  "
+  {:arglists '([]
+               [{:keys [registry, wrap-component, parallel] :as options}])
+   :tag Closeable}
+  ([] (init {}))
+  ([{:keys [registry, wrap-component] :as opts}]
    (let [registry! (atom (or registry {}))
          deps! (atom {})
          delays! (atom {})
@@ -126,8 +152,7 @@
                       (swap! deps! dissoc k)
                       (swap! delays! assoc k (start-delay k))
                       (throw (->> e (ex-info (str "Component start failure: " k)
-                                             {:type ::start-component-failure
-                                              ::key k}))))
+                                             {:type ::component-start-failure, ::key k}))))
                     (finally
                       (reset! snapshot! nil)))))]
      (reset! delays!
@@ -136,7 +161,7 @@
      (reify
        SystemState
        (start! [this] (start! this nil))
-       (start! [this {:keys [registry, filter-keys]}]
+       (start! [this {:keys [registry, filter-keys, parallel] :or {parallel (:parallel opts)}}]
          (when registry
            (let [old-ks (set (keys @registry!))
                  new-ks (set (keys registry))]
@@ -149,17 +174,20 @@
                ;; This will also init delays for added keys.
                (stop! this {:filter-keys added}))))
          (try
-           (->> (cond->> (keys @registry!) filter-keys (filter filter-keys))
-                (run! (fn start-key [k]
-                        (force (@delays! k)))))
+           (->> (keys @registry!)
+                (into [] (apply comp (cond-> []
+                                       filter-keys (conj (filter filter-keys))
+                                       :instances, (conj (map @delays!))
+                                       parallel,,, (conj (map (fn [inst] (future @inst)))))))
+                (run! deref))
            (catch Throwable e
-             (throw (->> e (ex-info "System start failure" {:type ::system-start-failure
-                                                            ::system this})))))
+             (throw (->> e (ex-info "System start failure" {:type ::system-start-failure, ::state this})))))
          (deref this))
 
        (stop! [this] (stop! this nil))
-       (stop! [this {:keys [filter-keys suspend]}]
-         (let [old-system (deref this)]
+       (stop! [this {:keys [filter-keys suspend parallel] :or {parallel (:parallel opts)}}]
+         (let [old-system (deref this)
+               future-stops! (atom [])]
            (->> (cond->> (keys @registry!) filter-keys (filter filter-keys))
                 (run! (fn stop-key [k]
                         ;; Run over dependent keys even if they are not started
@@ -177,11 +205,14 @@
                             ;; TODO: Should we keep current deps in suspended?
                             resume-fn (swap! suspended! assoc k {:inst inst
                                                                  :resume-fn resume-fn})
-                            stop-fn (try (swap! suspended! dissoc k)
-                                         (stop-fn @inst)
-                                         (catch Throwable _)))
+                            stop-fn (do (swap! suspended! dissoc k)
+                                        (if parallel
+                                          (swap! future-stops! conj
+                                                 (future (try (stop-fn @inst) (catch Throwable _))))
+                                          (try (stop-fn @inst) (catch Throwable _)))))
                           (swap! deps! dissoc k)
-                          (swap! delays! assoc k (start-delay k)))))))
+                          (swap! delays! assoc k (start-delay k))))))
+           (run! deref @future-stops!))
          (reset! snapshot! nil)
          (deref this))
 
