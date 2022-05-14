@@ -125,21 +125,17 @@
 
   **`parallel`** If `true` then subsequent start/stop calls execute components
   by default in parallel.
-
-  **`wrap-component`** Deprecated, to be removed soon.
   "
   {:arglists '([]
-               [{:keys [registry, wrap-component, parallel] :as options}])
+               [{:keys [registry, parallel] :as options}])
    :tag Closeable}
   ([] (init {}))
-  ([{:keys [registry, wrap-component] :as opts}]
+  ([{:keys [registry] :as opts}]
    (let [registry! (atom (or registry {}))
          deps! (atom {})
          delays! (atom {})
          snapshot! (atom nil)
          suspended! (atom {})
-         wrapped (fn wrapped-component [k]
-                   (cond-> (@registry! k) wrap-component (wrap-component k)))
          start-delay
          (fn start-delay [k]
            (delay (try
@@ -148,7 +144,7 @@
                       (if-let [{:keys [resume-fn]} (@suspended! k)]
                         (do (swap! suspended! dissoc k)
                             (resume-fn system))
-                        (component/start (wrapped k) system)))
+                        (component/start (@registry! k) system)))
                     (catch Throwable e
                       (swap! deps! dissoc k)
                       (swap! delays! assoc k (start-delay k))
@@ -198,8 +194,8 @@
                         (let [inst (@delays! k)
                               inst (or (when (some-> inst realized?) inst)
                                        (and (not suspend) (:inst (@suspended! k))))
-                              stop-fn (and inst (component/stop-fn (wrapped k)))
-                              resume-fn (when-let [suspend-fn (and inst suspend (component/suspend-fn (wrapped k)))]
+                              stop-fn (and inst (component/stop-fn (@registry! k)))
+                              resume-fn (when-let [suspend-fn (and inst suspend (component/suspend-fn (@registry! k)))]
                                           (try (suspend-fn @inst old-system)
                                                (catch Throwable _)))]
                           (cond

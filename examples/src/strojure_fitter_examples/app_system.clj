@@ -113,8 +113,23 @@
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
-(def app-registry
-  "The registry of system components."
+;; TODO: `suspend!` in wrap-component
+
+(defn- wrap-component
+  [[k c]]
+  [k {::component/start (fn [system]
+                          (try (doto (component/start c system) (->> (println "Started" k "->")))
+                               (catch Throwable e
+                                 (println ":: Starting" k "-> Exception:" (ex-message e))
+                                 (throw e))))
+      ::component/stop! (when-let [stop-fn (component/stop-fn c)]
+                          (fn [inst]
+                            (try (doto (stop-fn inst) (->> (println "Stopped" k "->")))
+                                 (catch Throwable e
+                                   (println ":: Stopped" k "-> Exception:" (ex-message e))))))}])
+
+(def ^:private app-registry*
+  "The registry of not-wrapped system components."
   {:system/dev-mode (constantly true)
    :system/app-config app-config-component
    :system/datasource-readwrite (datasource-component :read-only false)
@@ -138,6 +153,10 @@
                                    :system/rpc-client-2 []})
    :deps/ready-to-serve (ready-to-serve [:task/database-migration :system/mount])})
 
+(def app-registry
+  "The registry of wrapped system components."
+  (->> app-registry* (into {} (map wrap-component))))
+
 (def ^:private app-system-keys
   "Default keys to start for complete application."
   #{:task/database-migration
@@ -152,21 +171,6 @@
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
-;; TODO: `suspend!` in wrap-component
-
-(defn- wrap-component
-  [c k]
-  {::component/start (fn [system]
-                       (try (doto (component/start c system) (->> (println "Started" k "->")))
-                            (catch Throwable e
-                              (println ":: Starting" k "-> Exception:" (ex-message e))
-                              (throw e))))
-   ::component/stop! (when-let [stop-fn (component/stop-fn c)]
-                       (fn [inst]
-                         (try (doto (stop-fn inst) (->> (println "Stopped" k "->")))
-                              (catch Throwable e
-                                (println ":: Stopped" k "-> Exception:" (ex-message e))))))})
-
 (defn- print-system-status
   [system]
   (println "\n[OK]" (str (count system) "/" (count app-registry)) "system keys started.\n"))
@@ -174,7 +178,7 @@
 (defn- run-example
   ([system-keys] (run-example system-keys app-registry))
   ([system-keys registry]
-   (with-open [system! (system/init {:wrap-component wrap-component})]
+   (with-open [system! (system/init)]
      (-> (system/start! system! {:registry registry :filter-keys system-keys})
          (print-system-status))
      (-> (system/inspect system!)
@@ -332,7 +336,7 @@
   (run-example #{:task/database-migration})
   (run-example #{:system/http-client})
   (run-example #{:system/http-server})
-  (run-example #{:system/http-server} (dissoc app-registry :system/mount))
+  (run-example #{:system/http-server} (dissoc app-registry* :system/mount))
   (run-example #{:system/backend-server})
   )
 

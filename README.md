@@ -33,6 +33,7 @@ Dependency injection library for Clojure.
 ## Examples
 
 * [app-system](examples/src/strojure_fitter_examples/app_system.clj)
+* [How to log](examples/src/strojure_fitter_examples/how_to_log.clj)
 * [How to mount](examples/src/strojure_fitter_examples/how_to_mount.clj)
 * [How to parallel](examples/src/strojure_fitter_examples/how_to_parallel.clj)
 * [How to suspend](examples/src/strojure_fitter_examples/how_to_suspend.clj)
