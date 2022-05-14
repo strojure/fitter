@@ -1,4 +1,4 @@
-(ns examples.strojure-fitter.how-to-parallel
+(ns strojure-fitter-examples.how-to-parallel
   "Example of parallel start/stop of a system.
 
   NOTE: Only explicitly starting/stopping components execute in parallel. But

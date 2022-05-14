@@ -1,4 +1,4 @@
-(ns examples.strojure-fitter.how-to-suspend
+(ns strojure-fitter-examples.how-to-suspend
   "Example of suspending components."
   (:require [strojure.fitter.component :as component]
             [strojure.fitter.system :as system]))

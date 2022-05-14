@@ -1,4 +1,4 @@
-(ns examples.strojure-fitter.app-system
+(ns strojure-fitter-examples.app-system
   "Example app-system based on real application with integrant-based system."
   (:require [strojure.fitter.component :as component]
             [strojure.fitter.system :as system]))
