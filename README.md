@@ -1,5 +1,7 @@
 # fitter
 
+[![Clojars Project](https://img.shields.io/clojars/v/com.github.strojure/fitter.svg)](https://clojars.org/com.github.strojure/fitter)
+
 Dependency injection library for Clojure.
 
 ## Status
