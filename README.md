@@ -3,7 +3,7 @@
 System component management library for Clojure.
 
 [![Clojars Project](https://img.shields.io/clojars/v/com.github.strojure/fitter.svg)](https://clojars.org/com.github.strojure/fitter)
-(beta)
+<sup>(beta)</sup>
 
 ## Status
 
