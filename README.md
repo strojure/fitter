@@ -25,13 +25,17 @@ System component management library for Clojure.
 
 ## Overview
 
-* Components are just functions or maps with `::component/start`/`::component/stop!` keys.
-* Component `start` function receives `system` map with keys known in component registry.
-* The `registry` is a map of components where keys are unique and known in the system context.
-  These keys are referred in `component/start` function argument.
-* Dependency is formed when component access system key in start function.
-* System “atom” holds the state of running component instances and can be started,
-  stopped, restarted etc.
+* Components are just functions or maps with `::component/start`
+  /`::component/stop!` keys.
+* Component `start` function receives `system` map with keys known in component
+  registry. This map supports get operations only.
+* The `registry` is a map of components where keys are unique and known in the
+  system context. These keys are referred in `component/start` function
+  argument.
+* Dependencies are dynamic and built when component access system key in
+  its `start` function.
+* System state instance holds running component instances and used to start,
+  stop and restart registered components.
 
 ## Examples
 

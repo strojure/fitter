@@ -15,5 +15,8 @@
         </map>
       </option>
     </ClojureCodeStyleSettings>
+    <codeStyleSettings language="Markdown">
+      <option name="RIGHT_MARGIN" value="80" />
+    </codeStyleSettings>
   </code_scheme>
 </component>
