@@ -99,10 +99,10 @@
       (invoke [_ k not-found] (lookup-fn k not-found))
       ;; Specify IPersistentMap below to satisfy `(map? system)` in `spec/keys`.
       IPersistentMap
-      (seq [_] (keep (fn [[k inst]] (when (realized? inst)
-                                      (track-deps k)
-                                      [k (force-inst inst k)]))
-                     @delays!))
+      (seq [_] (seq (keep (fn [[k inst]] (when (realized? inst)
+                                           (track-deps k)
+                                           [k (force-inst inst k)]))
+                          @delays!)))
       (containsKey [_ k]
         (track-deps k)
         (if-let [inst (@delays! k)]
