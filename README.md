@@ -42,7 +42,3 @@ System component management library for Clojure.
 * [How to spec](examples/src/strojure_fitter_examples/how_to_spec.clj)
 * [How to suspend](examples/src/strojure_fitter_examples/how_to_suspend.clj)
 
-## TODO
-
-* Optional parallel start/stop of system components.
-* Experimental: lazy system which does not require explicit `start!` (?).
