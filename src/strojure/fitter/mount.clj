@@ -61,7 +61,10 @@
               (restore-var v)
               (fn resume [new-system]
                 (doto (resume-fn new-system)
-                  (mount-instance v))))))))))
+                  (mount-instance v))))))))
+
+    Object
+    (toString [_] (str sym))))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
