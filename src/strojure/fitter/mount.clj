@@ -64,3 +64,15 @@
                   (mount-instance v))))))))))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
+
+(defn registry-entry
+  "Returns system registry entry for the symbol."
+  [sym]
+  [sym (component sym)])
+
+(defn register-symbols
+  "Returns registry with added mounting components from the sequence of symbols."
+  [registry symbols]
+  (into registry (map registry-entry) symbols))
+
+;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••

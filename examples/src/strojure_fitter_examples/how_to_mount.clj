@@ -53,17 +53,11 @@
                                (constantly {:test-declare (:system/x system)}))}
          test-declare)
 
-
-
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
 (def ^:private registry
-  {:system/x (constantly :x)
-   `test-function (mount/component `test-function)
-   `test-deps (mount/component `test-deps)
-   `test-value (mount/component `test-value)
-   `test-suspend (mount/component `test-suspend)
-   `test-declare (mount/component `test-declare)})
+  (-> {:system/x (constantly :x)}
+      (mount/register-symbols #{`test-function `test-deps `test-value `test-suspend `test-declare})))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
