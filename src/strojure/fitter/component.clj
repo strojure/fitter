@@ -62,7 +62,7 @@
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
 (defn bundle
-  "Returns component as persistent map from provided functions."
+  "Returns component as persistent map assembled from provided functions."
   ([start-fn, stop!]
    {::start start-fn, ::stop! stop!})
   ([start-fn, stop!, suspend!]
