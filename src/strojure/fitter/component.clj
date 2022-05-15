@@ -60,3 +60,12 @@
     (-> this meta ::suspend!)))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
+
+(defn bundle
+  "Returns component as persistent map from provided functions."
+  ([start-fn, stop!]
+   {::start start-fn, ::stop! stop!})
+  ([start-fn, stop!, suspend!]
+   {::start start-fn, ::stop! stop!, ::suspend! suspend!}))
+
+;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••

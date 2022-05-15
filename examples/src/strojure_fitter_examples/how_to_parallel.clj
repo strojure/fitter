@@ -15,17 +15,18 @@
 
 (defn- component
   [id millis & deps]
-  {::component/start (fn [system]
-                       (let [state (keys (select-keys system deps))]
-                         (print-log (str "Start " id "\n"))
-                         (Thread/sleep millis)
-                         #_(print-log (str "Start " id " - DONE\n"))
-                         {(keyword "inst" (name id)) state}))
-   ::component/stop! (fn [instance]
-                       (print-log (str "Stop " id " - " instance "\n"))
-                       (Thread/sleep millis)
-                       (print-log (str "Stop " id " - " instance " - DONE\n"))
-                       id)})
+  (component/bundle
+    (fn [system]
+      (let [state (keys (select-keys system deps))]
+        (print-log (str "Start " id "\n"))
+        (Thread/sleep millis)
+        #_(print-log (str "Start " id " - DONE\n"))
+        {(keyword "inst" (name id)) state}))
+    (fn [instance]
+      (print-log (str "Stop " id " - " instance "\n"))
+      (Thread/sleep millis)
+      (print-log (str "Stop " id " - " instance " - DONE\n"))
+      id)))
 
 (def ^:private registry
   {:a (component :a 1000)

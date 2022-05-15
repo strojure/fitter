@@ -8,28 +8,27 @@
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
 (def ^:private simple-component
-  {::component/start (fn [_]
-                       (println "Start" 'simple-component)
-                       {:simple-component nil})
-
-   ::component/stop! (fn [instance]
-                       (println "Stop" 'simple-component instance))})
+  (component/bundle
+    (fn [_]
+      (println "Start" 'simple-component)
+      {:simple-component nil})
+    (fn [instance]
+      (println "Stop" 'simple-component instance))))
 
 (def ^:private suspendable-component
-  {::component/start (fn [{:system/keys [simple]}]
-                       (println "Start" 'suspendable-component simple)
-                       {:suspending-with-stop simple})
-
-   ::component/stop! (fn [instance]
-                       (println "Stop" 'suspendable-component instance))
-
-   ::component/suspend! (fn [instance old-system]
-                          (println "Suspend" 'suspendable-component)
-                          (fn resume [{:system/keys [simple]}]
-                            (println "Resume" 'suspendable-component simple)
-                            {:suspending-with-stop simple
-                             :resumed {:old-instance instance
-                                       :old-simple (:simple old-system)}}))})
+  (component/bundle
+    (fn [{:system/keys [simple]}]
+      (println "Start" 'suspendable-component simple)
+      {:suspending-with-stop simple})
+    (fn [instance]
+      (println "Stop" 'suspendable-component instance))
+    (fn [instance old-system]
+      (println "Suspend" 'suspendable-component)
+      (fn resume [{:system/keys [simple]}]
+        (println "Resume" 'suspendable-component simple)
+        {:suspending-with-stop simple
+         :resumed {:old-instance instance
+                   :old-simple (:simple old-system)}}))))
 
 (def ^:private registry
   {:system/simple simple-component
