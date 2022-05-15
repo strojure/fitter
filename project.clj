@@ -1,4 +1,4 @@
-(defproject com.github.strojure/fitter "0.2.38"
+(defproject com.github.strojure/fitter "0.3.39-SNAPSHOT"
   :description "Dependency injection for Clojure"
   :url "https://github.com/strojure/fitter"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
