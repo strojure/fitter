@@ -106,7 +106,8 @@
       (containsKey [_ k]
         (track-deps k)
         (if-let [inst (@delays! k)]
-          (force-inst inst k)
+          (do (force-inst inst k)
+              true)
           false))
       (entryAt [_ k]
         (track-deps k)
