@@ -35,19 +35,96 @@ Similar purpose libraries:
 * Bind component instances to global vars aka mount.
 * Parallel execution of components during system start/stop (option).
 
-## Overview
+## Basic usage
 
-* Components are just functions or maps with `::component/start`
-  /`::component/stop!` keys.
-* Component `start` function receives `system` map with keys known in component
-  registry. This map supports get operations only.
-* The `registry` is a map of components where keys are unique and known in the
-  system context. These keys are referred in `component/start` function
-  argument.
-* Dependencies are dynamic and built when component access system key in
-  its `start` function.
-* System state instance holds running component instances and used to start,
-  stop and restart registered components.
+### Component declaration
+
+Minimal component is just a function receiving “map” of other component
+instances and returns component instance. This “map” supports only `ILookup`
+interface. All lookups from this map instantiate requested components and form a
+dependency between components dynamically.
+
+Complete component defines its start, stop and suspend behaviour.
+
+```
+(ns user.readme.component
+  (:require [strojure.fitter.component :as component]))
+
+;; Simple function describes component start behaviour.
+(def component (fn [{:keys [another-component]}]
+                 (comment "Use" another-component)
+                 :instance))
+
+;; Just constant component.
+(def component (constantly true))
+
+;; Component described as hash map with required `::component/start` key.
+(def component
+  {::component/start (constantly :instance)
+   ::component/stop! (fn stop! [instance] 
+                       (comment "Destroy" instance))
+   ::component/suspend! (fn suspend! [old-instance old-system]
+                          (comment "Suspend" old-instance old-system)
+                          (fn resume [new-system]
+                            (comment "Resume" old-instance new-system)
+                            :instance))})
+
+;; Same map as above created using `component/of`.
+(def component
+  (component/of (constantly :instance)
+                (fn stop! [instance] 
+                  (comment "Destroy" instance))
+                (fn suspend! [old-instance old-system]
+                  (comment "Suspend" old-instance old-system)
+                  (fn resume [new-system]
+                    (comment "Resume" old-instance new-system)
+                    :instance))))
+```
+
+### System state
+
+System state is a variable holding instances of the running components.
+The state is initialized by `init` and then altered by `start!` and `stop!`.
+
+```
+(ns user.readme.system-state
+  (:require [strojure.fitter.system :as system]))
+
+(def registry
+  {::a (constantly ::a)
+   ::b (fn [{::keys [a]}] {::b a})})
+
+;; Initialize system state.
+(defonce system! 
+  (system/init {:registry registry}))
+
+;; Start all system keys.
+(system/start! system!)
+
+;; Stop all running keys.
+(system/stop! system!)
+
+;; Start/stop only specific keys.
+(system/start! system! {:filter-keys #{::a}})
+(system/stop! system! {:filter-keys #{::a}})
+
+;; Update registry on start.
+(system/start! system! {:registry (assoc registry ::c (constantly ::c))})
+
+;; Suspend suspendable components on stop and resume them on start.
+(doto system! (system/stop! {:suspend true})
+              (system/start!))
+
+;; Execute components in parallel
+(system/init {:parallel true})
+(system/start! system! {:parallel true})
+(system/stop! system! {:parallel true})
+
+;; Use `with-open` to stop system automatically.
+(with-open [system! (system/init {:registry registry})]
+  (let [{::keys [a b]} (system/start! system!)]
+    (comment "Work with" a b)))
+```
 
 ## Examples
 
