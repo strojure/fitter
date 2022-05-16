@@ -21,7 +21,12 @@
                          (some-> (component-spec k) (s/assert* system))
                          (component/start c system))
                    (component/stop-fn c)
-                   (component/suspend-fn c))])
+                   (when-let [suspend-fn (component/suspend-fn c)]
+                     (fn suspend! [instance old-system]
+                       (when-let [resume-fn (suspend-fn instance old-system)]
+                         (fn spec-resume [new-system]
+                           (some-> (component-spec k) (s/assert* new-system))
+                           (resume-fn new-system))))))])
 
 (def ^:private registry
   (->> {::a (comp parse-long ::b)
