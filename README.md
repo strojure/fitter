@@ -3,7 +3,13 @@
 System component management library for Clojure.
 
 [![Clojars Project](https://img.shields.io/clojars/v/com.github.strojure/fitter.svg)](https://clojars.org/com.github.strojure/fitter)
-<sup>(beta)</sup>
+
+Similar purpose libraries:
+
+* [Component](https://github.com/stuartsierra/component)
+* [Integrant](https://github.com/weavejester/integrant)
+* [mount](https://github.com/tolitius/mount)
+* [Dependency injection](https://github.com/darkleaf/di)
 
 ## Status
 
