@@ -116,7 +116,8 @@ The state is initialized by `init` and then altered by `start!` and `stop!`.
               (system/start!))
 
 ;; Execute components in parallel
-(system/init {:parallel true})
+(doto (system/init {:parallel true}) (system/start!)
+                                     (system/stop!))
 (system/start! system! {:parallel true})
 (system/stop! system! {:parallel true})
 
