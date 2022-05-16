@@ -13,7 +13,7 @@
 
 (defn- wrap-component
   [[k c]]
-  [k (component/bundle
+  [k (component/of
        (fn wrapped-start [system]
          (log-info "Start" k)
          (try (component/start c system)
@@ -38,17 +38,17 @@
 
 (def ^:private registry
   (into {} (map wrap-component)
-        {:a (component/bundle (fn [{:keys [b c]}] {:a/inst [b c]})
-                              (fn [inst] {:stopped inst}))
+        {:a (component/of (fn [{:keys [b c]}] {:a/inst [b c]})
+                          (fn [inst] {:stopped inst}))
 
-         :b (component/bundle (fn [_] {:b/inst :_})
-                              (fn [inst] {:stopped inst})
-                              (fn [instance _old-system]
+         :b (component/of (fn [_] {:b/inst :_})
+                          (fn [inst] {:stopped inst})
+                          (fn [instance _old-system]
                                 (fn resume [_new-system]
                                   (assoc instance :b/resume true))))
 
-         :c (component/bundle (fn [system] {:c/inst (system :b)} #_(throw (Exception. "OOPS")))
-                              (fn [inst] {:stopped inst} #_(throw (Exception. "Failure"))))}))
+         :c (component/of (fn [system] {:c/inst (system :b)} #_(throw (Exception. "OOPS")))
+                          (fn [inst] {:stopped inst} #_(throw (Exception. "Failure"))))}))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 

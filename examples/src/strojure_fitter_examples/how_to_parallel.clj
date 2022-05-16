@@ -15,7 +15,7 @@
 
 (defn- component
   [id millis & deps]
-  (component/bundle
+  (component/of
     (fn [system]
       (let [state (keys (select-keys system deps))]
         (print-log (str "Start " id "\n"))

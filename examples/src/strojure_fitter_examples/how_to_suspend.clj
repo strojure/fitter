@@ -8,7 +8,7 @@
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
 (def ^:private simple-component
-  (component/bundle
+  (component/of
     (fn [_]
       (println "Start" 'simple-component)
       {:simple-component nil})
@@ -16,7 +16,7 @@
       (println "Stop" 'simple-component instance))))
 
 (def ^:private suspendable-component
-  (component/bundle
+  (component/of
     (fn [{:system/keys [simple]}]
       (println "Start" 'suspendable-component simple)
       {:suspending-with-stop simple})

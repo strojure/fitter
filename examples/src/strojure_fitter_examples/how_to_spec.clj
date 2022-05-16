@@ -17,11 +17,11 @@
 
 (defn- wrap-spec
   [[k c]]
-  [k (component/bundle (fn spec-start [system]
+  [k (component/of (fn spec-start [system]
                          (some-> (component-spec k) (s/assert* system))
                          (component/start c system))
-                       (component/stop-fn c)
-                       (component/suspend-fn c))])
+                   (component/stop-fn c)
+                   (component/suspend-fn c))])
 
 (def ^:private registry
   (->> {::a (comp parse-long ::b)
