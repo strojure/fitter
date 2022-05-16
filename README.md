@@ -108,6 +108,12 @@ The state is initialized by `init` and then altered by `start!` and `stop!`.
 (system/start! system! {:filter-keys #{::a}})
 (system/stop! system! {:filter-keys #{::a}})
 
+;; Start/stop system incrementally.
+(doto system! (system/start! {:filter-keys #{:a}})
+              (system/start! {:filter-keys (complement #{:a})}))
+(doto system! (system/stop! {:filter-keys (complement #{:a})})
+              (system/stop! {:filter-keys #{:a}}))
+
 ;; Update registry on start.
 (system/start! system! {:registry (assoc registry ::c (constantly ::c))})
 
