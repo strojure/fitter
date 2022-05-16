@@ -46,7 +46,7 @@ dependency between components dynamically.
 
 Complete component defines its start, stop and suspend behaviour.
 
-```
+```clojure
 (ns user.readme.component
   (:require [strojure.fitter.component :as component]))
 
@@ -86,7 +86,7 @@ Complete component defines its start, stop and suspend behaviour.
 System state is a variable holding instances of the running components.
 The state is initialized by `init` and then altered by `start!` and `stop!`.
 
-```
+```clojure
 (ns user.readme.system-state
   (:require [strojure.fitter.system :as system]))
 
