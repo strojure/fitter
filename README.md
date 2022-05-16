@@ -17,23 +17,23 @@ Similar purpose libraries:
 * Fit small and large systems.
 * Help developer to reason about system state.
 
-## Status
-
-* [x] Start/stop system of components.
-* [x] Mount running instances.
-* [x] Suspend/resume components.
-* [x] Parallel start/stop.
-
 ## Terminology
 
 * **instance**
     * something useful instantiated :-)
 * **component**
-    * describe how to initialize/destroy instance of something.
+    * the description how to initialize/destroy instance.
 * **registry**
-    * map of keys and components
+    * map of keys and components used in system start/stop operations.
 * **system**
     * collection of dependent component instances.
+
+## Features
+
+* Start/stop system of components, full or partial.
+* Suspend/resume components on system restart.
+* Bind component instances to global vars aka mount.
+* Parallel execution of components during system start/stop (option).
 
 ## Overview
 
