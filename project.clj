@@ -1,5 +1,5 @@
-(defproject com.github.strojure/fitter "0.3.47-beta"
-  :description "Dependency injection for Clojure"
+(defproject com.github.strojure/fitter "0.4.48-SNAPSHOT"
+  :description "System component management library for Clojure"
   :url "https://github.com/strojure/fitter"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
