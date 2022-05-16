@@ -11,6 +11,12 @@ Similar purpose libraries:
 * [mount](https://github.com/tolitius/mount)
 * [Dependency injection](https://github.com/darkleaf/di)
 
+## Design goals
+
+* Describe system component dependencies in single place.
+* Fit small and large systems.
+* Help developer to reason about system state.
+
 ## Status
 
 * [x] Start/stop system of components.
