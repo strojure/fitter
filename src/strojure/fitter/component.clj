@@ -9,10 +9,15 @@
 (defprotocol Component
   "System component lifecycle functions."
 
-  (start
-    [component system]
-    "Returns component instance started in the system context. The `system` is
-    a map of other component instances which this component depends on.")
+  (start-fn
+    [component]
+    "Returns function to start component instance. The returned function
+    receives a map of other component instances which this component depends on,
+    and returns started instance.
+
+        (fn start [system] instance)
+
+    ")
 
   (stop-fn
     [component]
@@ -36,36 +41,38 @@
 
     "))
 
+(defn start
+  "Returns component instance started in the system context. The `system` is a
+  map of other component instances which this component depends on."
+  [component system]
+  (if-let [f (start-fn component)]
+    (f system)
+    (throw (ex-info "Start function is not defined for the component" {::component component}))))
+
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
 ;; Persistent map  as component:
 ;; {::start start-fn, ::stop! stop-fn, ::suspend! suspend-fn}
 (extend-type IPersistentMap Component
-  (start [this system]
-    (if-let [f (this ::start)]
-      (f system)
-      (throw (ex-info "Start function is not defined for the component" {}))))
-  (stop-fn [this]
-    (this ::stop!))
-  (suspend-fn [this]
-    (this ::suspend!)))
+  (start-fn [this] (this ::start))
+  (stop-fn [this] (this ::stop!))
+  (suspend-fn [this] (this ::suspend!)))
 
 ;; Function as component's `start`, other methods in meta.
 (extend-type AFunction Component
-  (start [this system]
-    (this system))
-  (stop-fn [this]
-    (-> this meta ::stop!))
-  (suspend-fn [this]
-    (-> this meta ::suspend!)))
+  (start-fn [this] this)
+  (stop-fn [this] (-> this meta ::stop!))
+  (suspend-fn [this] (-> this meta ::suspend!)))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
 
+#_{:clj-kondo/ignore [:shadowed-var]}
+
 (defn of
   "Returns component as persistent map assembled from provided functions."
-  ([start-fn, stop!]
-   {::start start-fn, ::stop! stop!})
-  ([start-fn, stop!, suspend!]
-   {::start start-fn, ::stop! stop!, ::suspend! suspend!}))
+  ([start, stop!]
+   {::start start, ::stop! stop!})
+  ([start, stop!, suspend!]
+   {::start start, ::stop! stop!, ::suspend! suspend!}))
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
