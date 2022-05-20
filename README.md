@@ -95,7 +95,7 @@ The state is initialized by `init` and then altered by `start!` and `stop!`.
    ::b (fn [{::keys [a]}] {::b a})})
 
 ;; Initialize system state.
-(defonce system! 
+(defonce system!
   (system/init {:registry registry}))
 
 ;; Start all system keys.
@@ -103,6 +103,13 @@ The state is initialized by `init` and then altered by `start!` and `stop!`.
 
 ;; Stop all running keys.
 (system/stop! system!)
+
+;; The `start!`, `stop!` and `deref` return the actual system map. 
+(let [{::keys [a b]} (system/start! system!)]
+  (comment "Work with" a b))
+(let [_ (system/start! system!)
+      {::keys [a b]} (deref system!)]
+  (comment "Work with" a b))
 
 ;; Start/stop only specific keys.
 (system/start! system! {:filter-keys #{::a}})
@@ -128,8 +135,8 @@ The state is initialized by `init` and then altered by `start!` and `stop!`.
 (system/stop! system! {:parallel true})
 
 ;; Use `with-open` to stop system automatically.
-(with-open [system! (system/init {:registry registry})]
-  (let [{::keys [a b]} (system/start! system!)]
+(with-open [s! (system/init {:registry registry})]
+  (let [{::keys [a b]} (system/start! s!)]
     (comment "Work with" a b)))
 ```
 
