@@ -1,5 +1,6 @@
 (ns strojure.fitter.system-test
-  (:require [clojure.spec.alpha :as s]
+  (:require [clojure.set :as set]
+            [clojure.spec.alpha :as s]
             [clojure.test :as test :refer [deftest testing]]
             [strojure.fitter.system :as system]))
 
@@ -13,7 +14,7 @@
 
 (defn- test-system
   []
-  (let [delays! (atom {:a (delay 1) :b (delay 2)})
+  (let [delays! (atom {:a (delay 1) :b (delay 2) :c (delay [:c0 :c1])})
         deps! (atom {})]
     (#'system/component-system :x delays! deps!)))
 
@@ -34,6 +35,10 @@
       (= :not-found ((test-system) :x :not-found))
       (= :not-found (:x (test-system) :not-found))
       (= :not-found (get (test-system) :x :not-found))
+      ;; get-in
+      (= :c0 (get-in (test-system) [:c 0]))
+      (= nil (get-in (test-system) [:c 3]))
+      (= :not-found (get-in (test-system) [:c 3] :not-found))
       ;; destructure
       (let [{:keys [a b x]} (test-system)]
         (= [1 2 nil] [a b x]))
@@ -56,6 +61,8 @@
                         (dissoc (test-system) :a))
       (thrown-with-msg? AbstractMethodError #".iterator\(.+ is abstract$"
                         (into {} (test-system)))
+      (thrown-with-msg? AbstractMethodError #".without\(.+ is abstract$"
+                        (set/rename-keys (test-system) {:a :aa}))
       ))
 
   (testing "Component system - undefined behavior."
