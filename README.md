@@ -39,10 +39,11 @@ Similar purpose libraries:
 
 ### Component declaration
 
-Minimal component is just a function receiving “map” of other component
-instances and returns component instance. This “map” supports only `ILookup`
-interface. All lookups from this map instantiate requested components and form a
-dependency between components dynamically.
+Minimal component is just a function receiving system “map” of other component
+instances and returning this component instance. The system “map” supports only
+`ILookup` interface. All lookups instantiate requested components and form a
+dependency between components dynamically. (!) All components are tightly
+coupled together by system key names.
 
 Complete component defines its start, stop and suspend behaviour.
 
@@ -146,6 +147,7 @@ The state is initialized by `init` and then altered by `start!` and `stop!`.
 * [How to log](examples/src/strojure_fitter_examples/how_to_log.clj)
 * [How to mount](examples/src/strojure_fitter_examples/how_to_mount.clj)
 * [How to parallel](examples/src/strojure_fitter_examples/how_to_parallel.clj)
+* [How to reuse](examples/src/strojure_fitter_examples/how_to_reuse.clj)
 * [How to spec](examples/src/strojure_fitter_examples/how_to_spec.clj)
 * [How to suspend](examples/src/strojure_fitter_examples/how_to_suspend.clj)
 
