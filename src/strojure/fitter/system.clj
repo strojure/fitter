@@ -184,15 +184,16 @@
 
        (stop! [this] (stop! this nil))
        (stop! [this {:keys [filter-keys suspend parallel] :or {parallel (:parallel opts)}}]
-         (let [old-system (deref this)
+         (let [deps @deps!
+               old-system (deref this)
                future-stops! (atom {})]
            (->> (cond->> (keys @registry!) filter-keys (filter filter-keys))
                 (run! (fn stop-key [k]
                         ;; Run over dependent keys even if they are not started
                         ;; because keys can emerge on registry changes.
-                        (let [dep-ks (->> @deps! (keep (fn [[dk deps]] (when (deps k) dk))))]
-                          (->> dep-ks (run! stop-key))
-                          (->> dep-ks (run! (fn [k] (some-> (@future-stops! k) (deref))))))
+                        (let [dks (->> deps (keep (fn [[dk deps]] (when (deps k) dk))))]
+                          (->> dks (run! stop-key))
+                          (->> dks (run! (fn [dk] (some-> (@future-stops! dk) (deref))))))
                         (let [inst (@delays! k)
                               inst (or (when (some-> inst realized?) inst)
                                        (and (not suspend) (:inst (@suspended! k))))
