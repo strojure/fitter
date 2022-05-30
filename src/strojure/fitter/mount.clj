@@ -37,14 +37,15 @@
   as component."
   [sym]
   (reify component/Component
-    (start [_ system]
+    (start-fn [_]
       (let [v (resolve-sym sym)
             start-fn (::component/start (meta v))]
         (when-not start-fn
           (throw (ex-info (str "Symbol is not a component: " sym)
                           {:type ::error :meta (meta v)})))
-        (doto (start-fn system)
-          (mount-instance v))))
+        (fn [system]
+          (doto (start-fn system)
+            (mount-instance v)))))
 
     (stop-fn [_]
       (let [v (resolve-sym sym)
