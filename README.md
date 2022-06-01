@@ -14,8 +14,11 @@ Similar purpose libraries:
 ## Design goals
 
 * Describe system component dependencies in single place.
-* Fit small and large systems.
-* Help developer to reason about system state.
+* Declare system components as easy as new function.
+* Allow ad-hoc and dynamic dependencies defined by components themselves.
+* Fit for systems with any amount of components.
+* Maximum flexibility for any scenario.
+* Help developer to reason about the whole system state.
 
 ## Terminology
 
@@ -30,10 +33,11 @@ Similar purpose libraries:
 
 ## Features
 
-* Start/stop system of components, full or partial.
+* Start/stop system of components, all registered components or only part of
+  them.
 * Suspend/resume components on system restart.
-* Bind component instances to global vars aka mount.
-* Parallel execution of components during system start/stop (option).
+* Bind component instances to global vars aka mount (optional).
+* Parallel execution of components during system start/stop (optional).
 
 ## Basic usage
 
@@ -41,9 +45,11 @@ Similar purpose libraries:
 
 Minimal component is just a function receiving system “map” of other component
 instances and returning this component instance. The system “map” supports only
-`ILookup` interface. All lookups instantiate requested components and form a
-dependency between components dynamically. (!) All components are tightly
-coupled together by system key names.
+`ILookup` interface, see [system-test]. All lookups instantiate requested
+components and form a dependency between components dynamically. (!) All
+components are tightly coupled together by system key names.
+
+[system-test]: test/strojure/fitter/system_test.clj
 
 Complete component defines its start, stop and suspend behaviour.
 
@@ -143,11 +149,10 @@ The state is initialized by `init` and then altered by `start!` and `stop!`.
 
 ## Examples
 
-* [app-system](examples/src/strojure_fitter_examples/app_system.clj)
-* [How to log](examples/src/strojure_fitter_examples/how_to_log.clj)
-* [How to mount](examples/src/strojure_fitter_examples/how_to_mount.clj)
-* [How to parallel](examples/src/strojure_fitter_examples/how_to_parallel.clj)
-* [How to reuse](examples/src/strojure_fitter_examples/how_to_reuse.clj)
-* [How to spec](examples/src/strojure_fitter_examples/how_to_spec.clj)
-* [How to suspend](examples/src/strojure_fitter_examples/how_to_suspend.clj)
+* [Feature: mount](examples/src/strojure_fitter_examples/feature_mount.clj)
+* [Feature: parallel](examples/src/strojure_fitter_examples/feature_parallel.clj)
+* [Feature: suspend](examples/src/strojure_fitter_examples/feature_suspend.clj)
+* [How-to: add logging](examples/src/strojure_fitter_examples/how_to_add_logging.clj)
+* [How-to: reuse components](examples/src/strojure_fitter_examples/how_to_reuse_components.clj)
+* [How-to: validate spec](examples/src/strojure_fitter_examples/how_to_validate_spec.clj)
 

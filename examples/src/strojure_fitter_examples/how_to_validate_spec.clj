@@ -1,4 +1,4 @@
-(ns strojure-fitter-examples.how-to-spec
+(ns strojure-fitter-examples.how-to-validate-spec
   "Example how to spec component arguments on system start."
   (:require [clojure.spec.alpha :as s]
             [strojure.fitter.component :as component]

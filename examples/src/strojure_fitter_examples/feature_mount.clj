@@ -1,4 +1,4 @@
-(ns strojure-fitter-examples.how-to-mount
+(ns strojure-fitter-examples.feature-mount
   "Example of using mounted components."
   (:require [strojure.fitter.component :as component]
             [strojure.fitter.mount :as mount]
