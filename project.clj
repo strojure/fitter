@@ -1,4 +1,4 @@
-(defproject com.github.strojure/fitter "1.1.0-73"
+(defproject com.github.strojure/fitter "1.1.1-74-SNAPSHOT"
   :description "System component management library for Clojure"
   :url "https://github.com/strojure/fitter"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
