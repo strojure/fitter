@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Release date `UNRELEASED`
 
-
+* [ mount ] - Use `requiring-resolve` for mounting symbol resolution.
 
 ## `1.0.68`
 

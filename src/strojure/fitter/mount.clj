@@ -8,8 +8,10 @@
 
 (defn- resolve-sym
   [sym]
-  (or (resolve sym)
-      (throw (ex-info (str "Unresolved var for symbol: " sym) {:type ::error}))))
+  (try
+    (requiring-resolve sym)
+    (catch Throwable t
+      (throw (->> t (ex-info (str "Unresolved var for symbol: " sym) {:type ::error}))))))
 
 (defn- mount-instance
   "Mounts instance to var, returns nil."
