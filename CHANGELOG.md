@@ -14,7 +14,7 @@ Release date `UNRELEASED`
 
 Release date `2023-02-24`
 
-* [ mount ] - Use `requiring-resolve` for mounting symbol resolution.
+* \[ mount ] - Use `requiring-resolve` for mounting symbol resolution.
 
 ## `1.0.68`
 

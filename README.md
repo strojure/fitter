@@ -54,21 +54,23 @@ components are tightly coupled together by system key names.
 Complete component defines its start, stop and suspend behaviour.
 
 ```clojure
-(ns user.readme.component
+(ns readme.component
   (:require [strojure.fitter.component :as component]))
 
-;; Simple function describes component start behaviour.
-(def component (fn [{:keys [another-component]}]
-                 (comment "Use" another-component)
-                 :instance))
+(def function-component
+  "Simple function describes component start behaviour."
+  (fn [{:keys [another-component]}]
+    (comment "Use" another-component)
+    :instance))
 
-;; Just constant component.
-(def component (constantly true))
+(def constant-component
+  "Just constant component."
+  (constantly true))
 
-;; Component described as hash map with required `::component/start` key.
-(def component
+(def map-component
+  "Component described as hash map with required `::component/start` key."
   {::component/start (constantly :instance)
-   ::component/stop! (fn stop! [instance] 
+   ::component/stop! (fn stop! [instance]
                        (comment "Destroy" instance))
    ::component/suspend! (fn suspend! [old-instance old-system]
                           (comment "Suspend" old-instance old-system)
@@ -76,10 +78,10 @@ Complete component defines its start, stop and suspend behaviour.
                             (comment "Resume" old-instance new-system)
                             :instance))})
 
-;; Same map as above created using `component/of`.
-(def component
+(def assembled-component
+  "Same map as above created using `component/of`."
   (component/of (constantly :instance)
-                (fn stop! [instance] 
+                (fn stop! [instance]
                   (comment "Destroy" instance))
                 (fn suspend! [old-instance old-system]
                   (comment "Suspend" old-instance old-system)
@@ -94,15 +96,15 @@ System state is a variable holding instances of the running components.
 The state is initialized by `init` and then altered by `start!` and `stop!`.
 
 ```clojure
-(ns user.readme.system-state
+(ns readme.system-state
   (:require [strojure.fitter.system :as system]))
 
-(def registry
+(def ^:private registry
   {::a (constantly ::a)
    ::b (fn [{::keys [a]}] {::b a})})
 
 ;; Initialize system state.
-(defonce system!
+(defonce ^:private system!
   (system/init {:registry registry}))
 
 ;; Start all system keys.
