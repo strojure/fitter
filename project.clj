@@ -1,4 +1,4 @@
-(defproject com.github.strojure/fitter "1.1.1-82"
+(defproject com.github.strojure/fitter "1.1.2-83-SNAPSHOT"
   :description "System component management library for Clojure"
   :url "https://github.com/strojure/fitter"
   :license {:name "The MIT License" :url "http://opensource.org/licenses/MIT"}
