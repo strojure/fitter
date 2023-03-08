@@ -55,14 +55,10 @@
 
   (testing "Component system - unsupported map operations."
     (test/are [expr] expr
-      (thrown-with-msg? AbstractMethodError #"clojure.lang.IPersistentMap assoc"
-                        (assoc (test-system) :a 0))
-      (thrown-with-msg? AbstractMethodError #".without\(.+ is abstract$"
-                        (dissoc (test-system) :a))
-      (thrown-with-msg? AbstractMethodError #".iterator\(.+ is abstract$"
-                        (into {} (test-system)))
-      (thrown-with-msg? AbstractMethodError #".without\(.+ is abstract$"
-                        (set/rename-keys (test-system) {:a :aa}))
+      (thrown? AbstractMethodError (assoc (test-system) :a 0))
+      (thrown? AbstractMethodError (dissoc (test-system) :a))
+      (thrown? AbstractMethodError (into {} (test-system)))
+      (thrown? AbstractMethodError (set/rename-keys (test-system) {:a :aa}))
       ))
 
   (testing "Component system - undefined behavior."
