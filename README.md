@@ -4,6 +4,7 @@
 
 System component management library for Clojure.
 
+[![cljdoc badge](https://cljdoc.org/badge/com.github.strojure/fitter)](https://cljdoc.org/d/com.github.strojure/fitter)
 [![tests](https://github.com/strojure/fitter/actions/workflows/tests.yml/badge.svg)](https://github.com/strojure/fitter/actions/workflows/tests.yml)
 
 Similar purpose libraries:
