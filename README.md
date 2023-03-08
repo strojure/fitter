@@ -2,7 +2,8 @@
 
 System component management library for Clojure.
 
-[![Clojars Project](https://img.shields.io/clojars/v/com.github.strojure/fitter.svg)](https://clojars.org/com.github.strojure/fitter)\
+[![Clojars Project](https://img.shields.io/clojars/v/com.github.strojure/fitter.svg)](https://clojars.org/com.github.strojure/fitter)
+
 [![cljdoc badge](https://cljdoc.org/badge/com.github.strojure/fitter)](https://cljdoc.org/d/com.github.strojure/fitter)
 [![tests](https://github.com/strojure/fitter/actions/workflows/tests.yml/badge.svg)](https://github.com/strojure/fitter/actions/workflows/tests.yml)
 
