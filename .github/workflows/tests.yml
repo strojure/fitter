@@ -3,16 +3,18 @@ name: tests
 on:
   workflow_dispatch: {}
   push:
+    branches: [ default ]
     paths: [ "src/**", "test/**", "project.clj" ]
   pull_request:
     paths: [ "src/**", "test/**", "project.clj" ]
 
 jobs:
-  lein-test:
+  tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Install dependencies
-        run: lein deps
-      - name: Run tests
-        run: lein test
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - run: lein deps
+
+      - run: lein test
