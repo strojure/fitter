@@ -1,4 +1,4 @@
-(ns strojure-fitter-examples.how-to-add-logging
+(ns example.how-to-add-logging
   "Example how to add custom behaviour around components in the registry like
   logging or exception handling."
   (:require [strojure.fitter.component :as component]

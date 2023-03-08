@@ -6,5 +6,5 @@
   :dependencies []
 
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.11.1"]]}
-             :dev {:source-paths ["doc" "examples/src"]
+             :dev {:source-paths ["doc"]
                    :dependencies []}})

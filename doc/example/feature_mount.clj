@@ -1,4 +1,4 @@
-(ns strojure-fitter-examples.feature-mount
+(ns example.feature-mount
   "Example of using mounted components."
   (:require [strojure.fitter.component :as component]
             [strojure.fitter.mount :as mount]
@@ -76,7 +76,7 @@
         (system/start! system!)
         (print-status))
       (print-status))
-  ;Status - {:test-function :default} {:test-value :default} {:test-suspend :default} {:test-deps :default} Attempting to call unbound fn: #'strojure-fitter-examples.how-to-mount/test-declare
+  ;Status - {:test-function :default} {:test-value :default} {:test-suspend :default} {:test-deps :default} Attempting to call unbound fn: #'example.how-to-mount/test-declare
   ;Start test-function
   ;Start test-deps
   ;Start test-value
@@ -85,7 +85,7 @@
   ;Status - {:test-function :x} {:test-value :x} {:test-suspend :x} {:test-deps {:test-value :x}} {:test-declare :x}
   ;Stop test-value {:test-value :x}
   ;Suspend test-suspend {:test-suspend :x}
-  ;Status - {:test-function :default} {:test-value :default} {:test-suspend :default} {:test-deps :default} Attempting to call unbound fn: #'strojure-fitter-examples.how-to-mount/test-declare
+  ;Status - {:test-function :default} {:test-value :default} {:test-suspend :default} {:test-deps :default} Attempting to call unbound fn: #'example.how-to-mount/test-declare
   ;Start test-function
   ;Start test-deps
   ;Start test-value
@@ -94,7 +94,7 @@
   ;Status - {:test-function :x} {:test-value :x} {:test-suspend :x, :resumed true} {:test-deps {:test-value :x}} {:test-declare :x}
   ;Stop test-value {:test-value :x}
   ;Stop test-suspend {:test-suspend :x, :resumed true}
-  ;Status - {:test-function :default} {:test-value :default} {:test-suspend :default} {:test-deps :default} Attempting to call unbound fn: #'strojure-fitter-examples.how-to-mount/test-declare
+  ;Status - {:test-function :default} {:test-value :default} {:test-suspend :default} {:test-deps :default} Attempting to call unbound fn: #'example.how-to-mount/test-declare
   )
 
 ;;••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••

@@ -151,10 +151,10 @@ The state is initialized by `init` and then altered by `start!` and `stop!`.
 
 ## Examples
 
-* [Feature: mount](examples/src/strojure_fitter_examples/feature_mount.clj)
-* [Feature: parallel](examples/src/strojure_fitter_examples/feature_parallel.clj)
-* [Feature: suspend](examples/src/strojure_fitter_examples/feature_suspend.clj)
-* [How-to: add logging](examples/src/strojure_fitter_examples/how_to_add_logging.clj)
-* [How-to: reuse components](examples/src/strojure_fitter_examples/how_to_reuse_components.clj)
-* [How-to: validate spec](examples/src/strojure_fitter_examples/how_to_validate_spec.clj)
+* [Feature: mount](doc/example/feature_mount.clj)
+* [Feature: parallel](doc/example/feature_parallel.clj)
+* [Feature: suspend](doc/example/feature_suspend.clj)
+* [How-to: add logging](doc/example/how_to_add_logging.clj)
+* [How-to: reuse components](doc/example/how_to_reuse_components.clj)
+* [How-to: validate spec](doc/example/how_to_validate_spec.clj)
 

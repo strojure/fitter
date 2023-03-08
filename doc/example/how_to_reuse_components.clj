@@ -1,4 +1,4 @@
-(ns strojure-fitter-examples.how-to-reuse-components
+(ns example.how-to-reuse-components
   "Example how to reuse components for different system keys names."
   (:require [strojure.fitter.system :as system]))
 
